@@ -35,29 +35,33 @@ class IRCBot:
     def handle_response(self, message):
         # Process messages and check for commands
         if f"{self.nickname}:" in message:
+            sender = message.split('!')[0][1:]
             command = message.split(f"{self.nickname}:")[1].strip()
-            self.respond_to_command(command)
+            self.respond_to_command(command, sender)
 
-    def respond_to_command(self, command):
+    def respond_to_command(self, command, sender):
         # Respond to recognized commands
         command = command.lower()
+        response = ""
         if "hello" in command:
-            self.send_command(f"PRIVMSG {self.channel} :Hello!")
+            response = f"Hello {sender}"
         elif "help" in command :
-            self.send_command(f"PRIVMSG {self.channel} :Available commands: help, hello, usage, die, users, forget")
+            response = "Available commands: help, hello, usage, die, users, forget"
         elif "usage" in command or "who are you" in command:
             self.send_command(f"PRIVMSG {self.channel} :I am KM-bot, a simple chatbot created by Kamran Bastani, and Max Schemenauer. CSC-482-01")
-            self.send_command(
-                f"PRIVMSG {self.channel} :I can't answer any advanced questions right now.")
+            response = "I can't answer any advanced questions right now."
         elif "forget" in command:
-            self.send_command(f"PRIVMSG {self.channel} :Memory Erased.")
+            response = "Memory Erased."
         elif "users" in command:
             self.send_command(f"PRIVMSG {self.channel} :{self.server.users}")
         elif "die" in command:
-            self.send_command(f"PRIVMSG {self.channel} :*death noises*")
+            response = "*death noises*"
+            self.send_command(f"PRIVMSG {self.channel} :{response}")
             sys.exit()
         else:
-            self.send_command(f"PRIVMSG {self.channel} :Unknown command: {command}")
+            response = f"Unknown command: {command}. Try 'usage' to see available commands."
+
+        self.send_command(f"PRIVMSG {self.channel} :{response}")
 
 if __name__ == "__main__":
     bot = IRCBot("KM-bot", "irc.libera.chat", 6667, "#CSC482")
