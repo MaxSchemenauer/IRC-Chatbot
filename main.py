@@ -1,5 +1,27 @@
+import random
 import socket
 import sys
+import time
+
+available_greetings = [
+    'Hello',
+    'Hi',
+    'Hey',
+    'Greetings',
+    'Howdy',
+    'What’s up',
+    'Good day',
+    'Salutations',
+    'Yo',
+    'Hello there',
+    'Hey there',
+    'Bonjour',
+    'Hola',
+    'Ahoy',
+    "What's good",
+    "Whats good",
+    "Whats up",
+]
 
 
 class IRCBot:
@@ -9,6 +31,7 @@ class IRCBot:
         self.port = port
         self.channel = channel
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.user_list = []
 
     def connect(self):
         # Connect to the IRC server
@@ -32,6 +55,10 @@ class IRCBot:
                 print(response)
                 self.handle_response(response)
 
+    def request_user_list(self):
+        """Send the NAMES command to request the list of users."""
+        self.send_command(f"NAMES {self.channel}")
+
     def handle_response(self, message):
         # Process messages and check for commands
         if f"{self.nickname}:" in message:
@@ -39,31 +66,56 @@ class IRCBot:
             command = message.split(f"{self.nickname}:")[1].strip()
             self.respond_to_command(command, sender)
 
+        if " 353 " in message:
+            # Parse and extract usernames from the message
+            print("MESSAGE", message)
+            user_names = message.split(f"{self.channel} :")[1]
+            print("INITIAL:", user_names)
+            user_names = user_names.split("\r")[0]
+            print("USERNAMES", user_names)
+            self.user_list = user_names.split(' ')  # Update the user list
+            print("User list updated:", self.user_list)  # Debugging print
+
     def respond_to_command(self, command, sender):
         # Respond to recognized commands
         command = command.lower()
-        response = ""
-        if "hello" in command:
-            response = f"Hello {sender}"
+        response = None
+        second_response = None
+        die = False
+        if command in [greeting.lower() for greeting in available_greetings]:
+            response = f"{random.choice(available_greetings)} {sender}"
         elif "help" in command :
             response = "Available commands: help, hello, usage, die, users, forget"
         elif "usage" in command or "who are you" in command:
-            self.send_command(f"PRIVMSG {self.channel} :I am KM-bot, a simple chatbot created by Kamran Bastani, and Max Schemenauer. CSC-482-01")
-            response = "I can't answer any advanced questions right now."
+            response = f"I am KM-bot, a simple chatbot created by Kamran Bastani, and Max Schemenauer. CSC-482-01"
+            second_response = "I can't answer any advanced questions right now."
         elif "forget" in command:
             response = "Memory Erased."
         elif "users" in command:
-            self.send_command(f"PRIVMSG {self.channel} :{self.server.users}")
-        elif "die" in command:
+            # Send the list of users to the channel if it exists
+            if self.user_list:
+                user_list_message = "Users in channel: " + ", ".join(self.user_list)
+                response = f"{self.channel} :{user_list_message}"
+            else:
+                response = "I couldn't retrieve the user list. Please try again."
+            self.request_user_list()  # Refresh the user list
+        elif "die" == command:
             response = "*death noises*"
-            self.send_command(f"PRIVMSG {self.channel} :{response}")
-            sys.exit()
+            die = True
         else:
             response = f"Unknown command: {command}. Try 'usage' to see available commands."
 
+        if "die" in response:
+            response = "I can't kill another bot."
+
+        time.sleep(0.75)
         self.send_command(f"PRIVMSG {self.channel} :{response}")
+        if second_response:
+            self.send_command(f"PRIVMSG {self.channel} :{second_response}")
+        if die:
+            sys.exit()
 
 if __name__ == "__main__":
-    bot = IRCBot("KM-bot", "irc.libera.chat", 6667, "#CSC482")
+    bot = IRCBot("KM-bot", "irc.libera.chat", 6667, "#csc482")
     bot.connect()
     bot.listen()
