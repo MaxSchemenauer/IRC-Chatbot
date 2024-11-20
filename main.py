@@ -2,8 +2,8 @@ import random
 import socket
 import sys
 import time
-
 import pandas as pd
+from movieRecommender import recommend
 
 from overlap import overlap
 from supplements import supplement_recommendation, load_claims
@@ -87,7 +87,9 @@ class IRCBot:
         response = None
         second_response = None
         die = False
-        if command in [greeting.lower() for greeting in available_greetings]:
+        if command == "hello there":
+            response = f"General Kenobi {sender}"
+        elif command in [greeting.lower() for greeting in available_greetings]:
             response = f"{random.choice(available_greetings)} {sender}"
         elif "help" in command:
             response = "Available commands: help, hello, usage, die, users, forget"
@@ -108,7 +110,13 @@ class IRCBot:
             response = "*death noises*"
             die = True
         elif "supplement" in command:
+<<<<<<< Updated upstream
             response = supplement_recommendation(data, supplement_claims, command)
+=======
+            supplement_recommendation()
+        elif "similar to" in command:
+            response = recommend(command.split("similar to ")[1])
+>>>>>>> Stashed changes
         else:
             response = f"Unknown command: {command}. Try 'usage' to see available commands."
         if response is not None and "die" in response:
