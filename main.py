@@ -93,7 +93,7 @@ class IRCBot:
             response = "Available commands: help, hello, usage, die, users, forget"
         elif "usage" in command or "who are you" in command:
             response = f"I am KM-bot, a simple chatbot created by Kamran Bastani, and Max Schemenauer. CSC-482-01"
-            second_response = "I can't answer any advanced questions right now."
+            second_response = "Try asking for supplement reccomendations. Make sure to use the word 'supplement'. For example, 'Give me a supplement to help with aerobic endurance and muscle recovery.' Feature made by Max Schemenauer."
         elif "forget" in command:
             response = "Memory Erased."
         elif "users" in command:

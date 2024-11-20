@@ -122,7 +122,7 @@ def supplement_recommendation(data, claims, prompt):
         popularity = data.loc[data['supplement'] == name, "popularity"].iloc[0]
         ranking[name] += (popularity/24100) * 0.25
         if percent_good > 0:
-            ranking[name] += 0.5*(percent_good/100)
+            ranking[name] += 0.25*(percent_good/100)
 
     # add score for notes, weighted less heavily than the claims.
     for name in supplement_names:
@@ -160,23 +160,25 @@ def supplement_recommendation(data, claims, prompt):
 
 
     recommendation_headline = f"I would recommend {supp1}, {supp2} and {supp3}. "
-    supp1_detail = (', '.join([statement[0] for statement in claims[supp1] if statement[1] > 1])) if any(statement[1] >= 1 for statement in claims[supp1]) else 'No proven benefits'
-    supp2_detail = (', '.join([statement[0] for statement in claims[supp2] if statement[1] > 1])) if any(statement[1] >= 1 for statement in claims[supp2]) else 'No proven benefits'
-    supp3_detail = (', '.join([statement[0] for statement in claims[supp3] if statement[1] > 1])) if any(statement[1] >= 1 for statement in claims[supp3]) else 'No proven benefits'
+
+    evidence_threshold = 0
+    supp1_detail = (', '.join([statement[0] for statement in claims[supp1] if statement[1] > 1])) if any(statement[1] >= evidence_threshold for statement in claims[supp1]) else 'No proven benefits'
+    supp2_detail = (', '.join([statement[0] for statement in claims[supp2] if statement[1] > 1])) if any(statement[1] >= evidence_threshold for statement in claims[supp2]) else 'No proven benefits'
+    supp3_detail = (', '.join([statement[0] for statement in claims[supp3] if statement[1] > 1])) if any(statement[1] >= evidence_threshold for statement in claims[supp3]) else 'No proven benefits'
 
     if supp1_detail == "" or supp1_detail is None: supp1_detail = ""
-    else: supp1_detail = f"{('helps with ' + supp1_detail)}"
+    else: supp1_detail = f"{supp1} {('helps with ' + supp1_detail)}. "
 
     if supp2_detail == "" or supp2_detail is None: supp2_detail = ""
-    else: supp2_detail = f"{('aids with ' + supp2_detail)}"
+    else: supp2_detail = f"{supp2} {('aids with ' + supp2_detail)}. "
 
     if supp3_detail == "" or supp3_detail is None: supp3_detail = ""
-    else: supp3_detail = f"{('is useful for ' + supp3_detail)}"
+    else: supp3_detail = f"{supp3} {('is useful for ' + supp3_detail)}. "
 
     detail = (
-        f"{supp1} {supp1_detail}. "
-        f"{supp2} {supp2_detail}. "
-        f"{supp3} {supp3_detail}."
+        f"{supp1_detail}"
+        f"{supp2_detail}"
+        f"{supp3_detail}"
     )
     print(recommendation_headline)
     print(detail)
