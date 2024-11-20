@@ -110,13 +110,10 @@ class IRCBot:
             response = "*death noises*"
             die = True
         elif "supplement" in command:
-<<<<<<< Updated upstream
             response = supplement_recommendation(data, supplement_claims, command)
-=======
             supplement_recommendation()
         elif "similar to" in command:
             response = recommend(command.split("similar to ")[1])
->>>>>>> Stashed changes
         else:
             response = f"Unknown command: {command}. Try 'usage' to see available commands."
         if response is not None and "die" in response:
