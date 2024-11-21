@@ -32,6 +32,9 @@ def preprocess_data():
                 combined.append((claim.strip(), score))
         return combined
 
+    def unique_sorted_strings(series):
+        return '|'.join(sorted(set(series.dropna())))
+
     # Apply pairing of claims and evidence
     data['Claim-Evidence'] = data.apply(
         lambda row: combine_claims_and_evidence(
@@ -64,7 +67,7 @@ def preprocess_data():
         'Claim-Evidence': aggregate_claim_evidence,
         "fitness category": concatenate_strings,
         "sport or exercise type tested": concatenate_strings,
-        "popularity": max_value,
+        "popularity": average,
         "number of studies examined": sum_values,
         "number of citations": max_value,
         "efficacy": concatenate_strings,
@@ -113,16 +116,17 @@ def supplement_recommendation(data, claims, prompt):
             claim = claim_evidence[0]
             evidence = claim_evidence[1]
             claim_overlap = overlap(text, claim)
-            overlap_score += (claim_overlap * evidence/2)
+            overlap_score += (claim_overlap * evidence/2) * 0.75
         ranking[name] += overlap_score
 
     # add points based on % of good studies
     for name in supplement_names:
         percent_good = data.loc[data['supplement'] == name, "% positive studies/ trials"].iloc[0]
+        num_of_studies = data.loc[data['supplement'] == name, "number of studies examined"].iloc[0]
         popularity = data.loc[data['supplement'] == name, "popularity"].iloc[0]
-        ranking[name] += (popularity/24100) * 0.25
+        ranking[name] += (popularity/24100) * 0.1
         if percent_good > 0:
-            ranking[name] += (percent_good/100) * .25
+            ranking[name] += (percent_good/100) * (1.25*(num_of_studies/56))
 
     # add score for notes, weighted less heavily than the claims.
     for name in supplement_names:
@@ -136,8 +140,8 @@ def supplement_recommendation(data, claims, prompt):
         elif not isinstance(notes, str):
             notes = str(notes)
 
-        sport_overlap_score += overlap(text, sport)
-        notes_overlap_score += overlap(text, notes) * .1
+        sport_overlap_score += overlap(text, sport) * 0.2
+        notes_overlap_score += (overlap(text, notes) * 0.2)
         ranking[name] += notes_overlap_score
         ranking[name] += sport_overlap_score
 

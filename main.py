@@ -6,7 +6,7 @@ import pandas as pd
 from movieRecommender import recommend
 
 from overlap import overlap
-from supplements import supplement_recommendation, load_claims
+from supplements import supplement_recommendation, load_claims, preprocess_data
 
 available_greetings = [
     'Hello',
