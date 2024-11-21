@@ -126,7 +126,7 @@ def supplement_recommendation(data, claims, prompt):
         popularity = data.loc[data['supplement'] == name, "popularity"].iloc[0]
         ranking[name] += (popularity/24100) * 0.1
         if percent_good > 0:
-            ranking[name] += (percent_good/100) * (1.25*(num_of_studies/56))
+            ranking[name] += (percent_good/100) * (1.00*(num_of_studies/56))
 
     # add score for notes, weighted less heavily than the claims.
     for name in supplement_names:
