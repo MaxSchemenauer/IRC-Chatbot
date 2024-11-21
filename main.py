@@ -111,7 +111,6 @@ class IRCBot:
             die = True
         elif "supplement" in command:
             response = supplement_recommendation(data, supplement_claims, command)
-            supplement_recommendation()
         elif "similar to" in command:
             response = recommend(command.split("similar to ")[1])
         else:
