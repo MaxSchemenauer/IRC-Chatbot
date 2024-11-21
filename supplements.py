@@ -122,7 +122,7 @@ def supplement_recommendation(data, claims, prompt):
         popularity = data.loc[data['supplement'] == name, "popularity"].iloc[0]
         ranking[name] += (popularity/24100) * 0.25
         if percent_good > 0:
-            ranking[name] += 0.25*(percent_good/100)
+            ranking[name] += (percent_good/100) * .25
 
     # add score for notes, weighted less heavily than the claims.
     for name in supplement_names:
@@ -137,7 +137,7 @@ def supplement_recommendation(data, claims, prompt):
             notes = str(notes)
 
         sport_overlap_score += overlap(text, sport)
-        notes_overlap_score += overlap(text, notes) * .25
+        notes_overlap_score += overlap(text, notes) * .1
         ranking[name] += notes_overlap_score
         ranking[name] += sport_overlap_score
 
@@ -158,6 +158,21 @@ def supplement_recommendation(data, claims, prompt):
     supp2 = sorted_ranking[1][0]
     supp3 = sorted_ranking[2][0]
 
+    top_supplements = [supp1, supp2, supp3]
+    if "Whey protein" in top_supplements and "Soy protein" in top_supplements:
+        # Find the lower-ranked protein and replace it with the next-ranked supplement
+        whey_rank = top_supplements.index("Whey protein")
+        soy_rank = top_supplements.index("Soy protein")
+
+        # Determine the lower-ranked protein
+        lower_ranked_index = max(whey_rank, soy_rank)
+        next_supplement = sorted_ranking[3][0]  # Pick the next-ranked supplement (4th in the list)
+
+        # Replace the lower-ranked protein
+        top_supplements[lower_ranked_index] = next_supplement
+
+    # Unpack the top 3 supplements
+    supp1, supp2, supp3 = top_supplements
 
     recommendation_headline = f"I would recommend {supp1}, {supp2} and {supp3}. "
 
