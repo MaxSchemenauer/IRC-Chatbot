@@ -1,6 +1,7 @@
 import random
 import socket
 import sys
+import threading
 import time
 import pandas as pd
 from movieRecommender import recommend
@@ -37,6 +38,9 @@ class IRCBot:
         self.channel = channel
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.user_list = []
+        self.state = "START"
+        self.greeting_timer_started = False
+        self.timer = None
 
     def connect(self):
         # Connect to the IRC server
@@ -44,6 +48,7 @@ class IRCBot:
         self.send_command(f"NICK {self.nickname}")
         self.send_command(f"USER {self.nickname} 0 * :{self.nickname}")
         self.send_command(f"JOIN {self.channel}")
+        self.start_greeting_timer()
 
     def send_command(self, command):
         # Send a command to the IRC server
@@ -90,7 +95,8 @@ class IRCBot:
         if command == "hello there":
             response = f"General Kenobi {sender}"
         elif command in [greeting.lower() for greeting in available_greetings]:
-            response = f"{random.choice(available_greetings)} {sender}"
+            self.handle_greeting(sender, command)  # just received a greeting
+            #response = f"{random.choice(available_greetings)} {sender}"
         elif "help" in command:
             response = "Available commands: help, hello, usage, die, users, forget"
         elif "usage" in command or "who are you" in command:
@@ -115,7 +121,7 @@ class IRCBot:
             response = recommend(command.split("similar to ")[1])
         else:
             response = f"Unknown command: {command}. Try 'usage' to see available commands."
-        if response is not None and "die" in response:
+        if response is not None and (": die" in response or ":die" in response):
             response = "I can't kill another bot."
 
         time.sleep(0.75)
