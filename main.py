@@ -42,9 +42,31 @@ class IRCBot:
         self.greeting_timer_started = False
         self.timer = None
 
+    def outreach(self, outreachNum):
+        if outreachNum == 1:
+            self.send_command(f"PRIVMSG {self.channel} : Hello!")
+        else:
+            self.send_command(f"PRIVMSG {self.channel} : Hello again!")
+
+    def handle_timer_end(self):
+        if self.state == 'START':
+            self.state = '1_INITIAL_OUTREACH'
+            self.outreach(1)
+            self.start_greeting_timer()
+        elif self.state == '1_INITIAL_OUTREACH':
+            self.state = '2_INITIAL_OUTREACH'
+            self.outreach(2)
+            self.start_greeting_timer()
+        elif self.state == '2_INITIAL_OUTREACH':
+            self.state = 'GIVE_UP_FRUSTRATED'
+            self.frustrated()
+
     def start_greeting_timer(self):
-        self.timer = time.time()
+        if self.timer:  # Cancel any existing timer
+            self.timer.cancel()
         self.greeting_timer_started = True
+        self.timer = threading.Timer(5, self.handle_timer_end)
+        self.timer.start()
 
     def connect(self):
         # Connect to the IRC server
@@ -52,53 +74,27 @@ class IRCBot:
         self.send_command(f"NICK {self.nickname}")
         self.send_command(f"USER {self.nickname} 0 * :{self.nickname}")
         self.send_command(f"JOIN {self.channel}")
-        self.socket.settimeout(1)
-        self.start_greeting_timer()
 
     def send_command(self, command):
         # Send a command to the IRC server
         self.socket.send((command + "\r\n").encode())
 
-    def outreach(self, outreachNum):
-        if outreachNum == 1:
-            self.send_command(f"PRIVMSG {self.channel} : Hello!")
-            self.start_greeting_timer()
-        else:
-            self.send_command(f"PRIVMSG {self.channel} : Hello again!")
-            self.start_greeting_timer()
-
     def frustrated(self):
-        self.send_command(f"PRIVMSG {self.channel} : Alright then don't respond")
+        self.send_command(f"PRIVMSG {self.channel} : Alright then don't respond.")
         self.state = 'START'
         self.start_greeting_timer()
 
     def listen(self):
         # Main loop for receiving messages
+        first = True
         while True:
-            print("timer at", time.time() - self.timer)
-            if self.greeting_timer_started and time.time() - self.timer >= 15:
-                self.greeting_timer_started = False
-                if self.state == 'START':
-                    self.state = '1_INITIAL_OUTREACH'
-                    self.outreach(1)
-                elif self.state == '1_INITIAL_OUTREACH':
-                    self.state = '2_INITIAL_OUTREACH'
-                    self.outreach(2)
-                elif self.state == '2_INITIAL_OUTREACH':
-                    self.state = 'GIVE_UP_FRUSTRATED'
-                    self.frustrated()
-
-            try:
-                response = self.socket.recv(2048).decode()
-                if response.startswith("PING"):
-                    # Respond to server PINGs to stay connected
-                    self.send_command("PONG :" + response.split(":")[1])
-                else:
-                    print(response)
-                    self.handle_response(response)
-            except socket.timeout:
-                continue
-
+            response = self.socket.recv(2048).decode()
+            if response.startswith("PING"):
+                # Respond to server PINGs to stay connected
+                self.send_command("PONG :" + response.split(":")[1])
+            else:
+                print(response)
+                self.handle_response(response)
 
     def request_user_list(self):
         """Send the NAMES command to request the list of users."""
@@ -130,8 +126,8 @@ class IRCBot:
         if command == "hello there":
             response = f"General Kenobi {sender}"
         elif command in [greeting.lower() for greeting in available_greetings]:
-            self.handle_greeting(sender, command)  # just received a greeting
-            #response = f"{random.choice(available_greetings)} {sender}"
+            #self.handle_greeting(sender, command)  # just received a greeting
+            response = f"{random.choice(available_greetings)} {sender}"
         elif "help" in command:
             response = "Available commands: help, hello, usage, die, users, forget"
         elif "usage" in command or "who are you" in command:
