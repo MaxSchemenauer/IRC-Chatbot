@@ -174,6 +174,7 @@ class IRCBot:
         command = command.lower()
         response = None
         second_response = None
+        third_response = None
         die = False
         if "supplement" in command:
             response = supplement_recommendation(data, supplement_claims, command)
@@ -185,6 +186,7 @@ class IRCBot:
         elif "usage" in command or "who are you" in command:
             response = f"I am KM-bot, a simple chatbot created by Kamran Bastani, and Max Schemenauer. CSC-482-01"
             second_response = "Try asking for supplement reccomendations. Make sure to use the word 'supplement'. For example, 'Give me a supplement to help with aerobic endurance and muscle recovery.' Feature made by Max Schemenauer."
+            third_response = "You can also ask for movie recommendations. Ensure to use the words 'similar to' and then the name of the movie. For example, 'What are some movies similar to Cars' Feature made by Kamran Bastani."
         elif "forget" in command:
             response = "Memory Erased."
         elif "users" in command:
@@ -225,6 +227,8 @@ class IRCBot:
             self.send_command(f"PRIVMSG {self.channel} :{response}")
         if second_response:
             self.send_command(f"PRIVMSG {self.channel} :{second_response}")
+        if third_response:
+            self.send_command(f"PRIVMSG {self.channel} :{third_response}")
         if die:
             sys.exit()
 
