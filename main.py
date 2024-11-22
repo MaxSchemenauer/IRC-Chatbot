@@ -45,6 +45,8 @@ class IRCBot:
     def outreach(self, outreachNum):
         if outreachNum == 1:
             self.conversation_with = random.choice(self.user_list)
+            if "Max_test" in self.user_list:
+                self.conversation_with = "Max_test"
             self.send_command(f"PRIVMSG {self.channel} : Hello {self.conversation_with}!")
         else:
             self.send_command(f"PRIVMSG {self.channel} : Hello again {self.conversation_with}!")
@@ -55,11 +57,11 @@ class IRCBot:
         if self.state == 'START':
             self.state = '1_INITIAL_OUTREACH'
             self.outreach(1)
-            self.start_greeting_timer(15)
+            self.start_greeting_timer(20)
         elif self.state == '1_INITIAL_OUTREACH':
             self.state = '2_INITIAL_OUTREACH'
             self.outreach(2)
-            self.start_greeting_timer(15)
+            self.start_greeting_timer(20)
         elif self.state == '2_INITIAL_OUTREACH':
             self.state = 'GIVE_UP_FRUSTRATED'
             self.frustrated()
@@ -87,7 +89,7 @@ class IRCBot:
         self.send_command(f"NICK {self.nickname}")
         self.send_command(f"USER {self.nickname} 0 * :{self.nickname}")
         self.send_command(f"JOIN {self.channel}")
-        self.start_greeting_timer(20)
+        self.start_greeting_timer(30)
 
 
     def frustrated(self):
@@ -104,27 +106,28 @@ class IRCBot:
         elif self.state == "2_INQUIRY_REPLY":
             self.send_command(f"PRIVMSG {self.channel} : I sat around in this channel getting tested.")
             self.state = '1_INQUIRY_REPLY'
-            self.state = "STATE"
+            self.state = "START"
+            self.start_greeting_timer(30)
 
     def handle_inquiry_reply(self, sender, command):
         if sender != self.conversation_with:
             return
         self.send_command(f"PRIVMSG {self.channel} : What did you do today {sender}?")
         self.state = '2_INQUIRY'
-        self.start_greeting_timer(15)
+        self.start_greeting_timer(20)
 
     def handle_greeting(self, sender, message):
         if self.state == 'START': # we receive the initial greeting
             self.conversation_with = sender
             self.state = '2_OUTREACH_REPLY'
             self.send_command(f"PRIVMSG {self.channel} : Hello! {sender}")
-            self.start_greeting_timer(15)
+            self.start_greeting_timer(20)
         if "INITIAL_OUTREACH" in self.state: # we receive a greeting after we reached out
             if sender != self.conversation_with:
                 return
             self.state = "1_INQUIRY"
             self.send_command(f"PRIVMSG {self.channel} : How are you {sender}?")
-            self.start_greeting_timer(15)
+            self.start_greeting_timer(20)
 
     def send_command(self, command):
         # Send a command to the IRC server
@@ -207,7 +210,10 @@ class IRCBot:
         elif self.state == "2_INQUIRY_REPLY": # just received second inquiry
             self.receive_inquiry(sender, command)
         elif self.state == "2_INQUIRY":
+            if self.timer:  # Cancel any existing timer
+                self.timer.cancel()
             self.state = "START"
+
             return
         else:
             response = f"Unknown command: {command}. Try 'usage' to see available commands."

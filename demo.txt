@@ -1,0 +1,30 @@
+[1:17:57 PM] → KM-bot has joined
+[1:17:59 PM] <Max_test> KM-bot: usage
+[1:18:00 PM] <KM-bot> I am KM-bot, a simple chatbot created by Kamran Bastani, and Max Schemenauer. CSC-482-01
+[1:18:00 PM] <KM-bot> You can also ask for movie recommendations. Ensure to use the words 'similar to' and then the name of the movie. For example, 'What are some movies similar to Cars' Feature made by Kamran Bastani.
+[1:18:00 PM] <KM-bot> Try asking for supplement reccomendations. Make sure to use the word 'supplement'. For example, 'Give me a supplement to help with aerobic endurance and muscle recovery.' Feature made by Max Schemenauer.
+[1:18:03 PM] <Max_test> KM-bot: users
+[1:18:04 PM] <KM-bot> #csc482 :Users in channel: KM-bot, Max_test, Guest17, Guest14, @foaad_office
+[1:18:08 PM] <Max_test> KM-bot: hello
+[1:18:08 PM] <KM-bot>  Hello! Max_test
+[1:18:15 PM] <Max_test> KM-bot: How are you?
+[1:18:15 PM] <KM-bot>  I'm doing good.
+[1:18:22 PM] <Max_test> KM-bot: what did you do today?
+[1:18:23 PM] <KM-bot>  I sat around in this channel getting tested.
+[1:18:53 PM] <KM-bot>  Hello Max_test!
+[1:18:55 PM] <Max_test> KM-bot: Whats good
+[1:18:55 PM] <KM-bot>  How are you Max_test?
+[1:19:04 PM] <Max_test> KM-bot: i'm doing alright
+[1:19:04 PM] <KM-bot>  What did you do today Max_test?
+[1:19:10 PM] <Max_test> KM-bot: I created you
+[1:19:48 PM] <Max_test> KM-bot: give me a supplement that helps with aerobic endurance and efficiency, something that will reduce fatigue
+[1:19:49 PM] <KM-bot> Max_test, I would recommend BCAAs, Caffeine and Beetroot juice. BCAAs helps with fatigue resistance, aerobic performance, endurance, power, muscle damage + soreness. Caffeine aids with intense aerobic performance, endurance performance, skill, agility + speed, performance when sleep-deprived, mood during exercise, high-intensity performance. Beetroot juice is useful for aerobic efficiency.
+[1:20:18 PM] <Max_test> KM-bot: I need a supplement that will help me gain weight, and build muscle. I want to start weightlifting to get strong.
+[1:20:20 PM] <KM-bot> Max_test, I would recommend Whey protein, Creatine and BCAAs. Whey protein helps with weight + fat loss, strength, muscle building + recovery. Creatine aids with aerobic endurance, high-intensity performance, strength, power, neuromuscular function, muscle mass. BCAAs is useful for fatigue resistance, aerobic performance, endurance, power, muscle damage + soreness.
+[1:20:35 PM] <Max_test> KM-bot: give me movies similar to Toy Story
+[1:20:39 PM] <KM-bot> Movies similar to Toy Story include: Toy Story 2, Toy Story 3, Free Birds, Meet the Robinsons, Oliver & Company
+[1:20:56 PM] <Max_test> KM-bot: give me movies similar to Interstellar
+[1:21:03 PM] <KM-bot> Movies similar to Interstellar include: Rob Roy, Rocky II, The River, One Flew Over the Cuckoo's Nest, The Ice Storm
+[1:21:20 PM] <Max_test> KM-bot: die
+[1:21:21 PM] <KM-bot> *death noises*
+[1:21:21 PM] ← KM-bot has left (Remote host closed the connection)
