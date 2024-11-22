@@ -6,9 +6,7 @@ import threading
 import time
 import pandas as pd
 from movieRecommender import recommend
-
-from overlap import overlap
-from supplements import supplement_recommendation, load_claims, preprocess_data
+from supplements import supplement_recommendation, load_claims
 
 available_greetings = [
     'Hello',
