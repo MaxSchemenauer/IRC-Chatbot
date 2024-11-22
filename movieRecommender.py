@@ -50,7 +50,6 @@ def secondary(df, target_genres):
             for g in gen:
                 total += 1
                 if g in target_genres:
-                    #print(g, target_genres)
                     matches += 1
 
             if matches / total > 0.99:
@@ -60,7 +59,6 @@ def secondary(df, target_genres):
 def similarity(movie, df):
     target_genres = movie['genres'].iloc[0]
     primary_matches = df[df['genres'] == target_genres]
-    #print(len(primary_matches['title'].tolist()))
     desc = movie['overview'].iloc[0]
     titles = primary_matches['title'].tolist()[:100]
     descriptions = primary_matches['overview'].tolist()[:100]
@@ -72,8 +70,7 @@ def similarity(movie, df):
             scores.append(-1)
 
     if len(scores) < 5:
-        print("hi")
-        secondary_matches = secondary(df, target_genres)#df[df['genres'].apply(lambda x: has_target_genre(x, target_genres))]
+        secondary_matches = secondary(df, target_genres)
         titles = secondary_matches['title'].tolist()
         print(f"secondary: {len(secondary_matches)}   total: {len(df)}")
         descriptions = secondary_matches['overview'].tolist()[:100]
@@ -82,7 +79,6 @@ def similarity(movie, df):
                 scores.append(overlap(desc, d))
             else:
                 scores.append(-1)
-    #print(scores)
     top6 = sorted(range(len(scores)), key=lambda i: scores[i], reverse=True)[:6]
     retlst = []
     for item in top6:
@@ -130,10 +126,7 @@ def recommend(title):
             if flag:
                 break
             recommendations.append(similar[j])
-        #print("adding", recommendations)
 
-    #print(movie['genres'].iloc[0])
-    #print(df['overview'].head().iloc[0])
     retstr = f"Movies similar to {closest_match} include:"
     i = 1
     for item in recommendations:
