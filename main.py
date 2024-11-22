@@ -42,28 +42,63 @@ class IRCBot:
         self.greeting_timer_started = False
         self.timer = None
 
+    def start_greeting_timer(self):
+        self.timer = time.time()
+        self.greeting_timer_started = True
+
     def connect(self):
         # Connect to the IRC server
         self.socket.connect((self.server, self.port))
         self.send_command(f"NICK {self.nickname}")
         self.send_command(f"USER {self.nickname} 0 * :{self.nickname}")
         self.send_command(f"JOIN {self.channel}")
+        self.socket.settimeout(1)
         self.start_greeting_timer()
 
     def send_command(self, command):
         # Send a command to the IRC server
         self.socket.send((command + "\r\n").encode())
 
+    def outreach(self, outreachNum):
+        if outreachNum == 1:
+            self.send_command(f"PRIVMSG {self.channel} : Hello!")
+            self.start_greeting_timer()
+        else:
+            self.send_command(f"PRIVMSG {self.channel} : Hello again!")
+            self.start_greeting_timer()
+
+    def frustrated(self):
+        self.send_command(f"PRIVMSG {self.channel} : Alright then don't respond")
+        self.state = 'START'
+        self.start_greeting_timer()
+
     def listen(self):
         # Main loop for receiving messages
         while True:
-            response = self.socket.recv(2048).decode()
-            if response.startswith("PING"):
-                # Respond to server PINGs to stay connected
-                self.send_command("PONG :" + response.split(":")[1])
-            else:
-                print(response)
-                self.handle_response(response)
+            print("timer at", time.time() - self.timer)
+            if self.greeting_timer_started and time.time() - self.timer >= 15:
+                self.greeting_timer_started = False
+                if self.state == 'START':
+                    self.state = '1_INITIAL_OUTREACH'
+                    self.outreach(1)
+                elif self.state == '1_INITIAL_OUTREACH':
+                    self.state = '2_INITIAL_OUTREACH'
+                    self.outreach(2)
+                elif self.state == '2_INITIAL_OUTREACH':
+                    self.state = 'GIVE_UP_FRUSTRATED'
+                    self.frustrated()
+
+            try:
+                response = self.socket.recv(2048).decode()
+                if response.startswith("PING"):
+                    # Respond to server PINGs to stay connected
+                    self.send_command("PONG :" + response.split(":")[1])
+                else:
+                    print(response)
+                    self.handle_response(response)
+            except socket.timeout:
+                continue
+
 
     def request_user_list(self):
         """Send the NAMES command to request the list of users."""
