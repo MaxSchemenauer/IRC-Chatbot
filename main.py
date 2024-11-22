@@ -209,7 +209,7 @@ class IRCBot:
             return
         else:
             response = f"Unknown command: {command}. Try 'usage' to see available commands."
-        if response is not None and (": die" in response or ":die" in response):
+        if response is not None and ("die" in response):
             response = "I can't kill another bot."
 
         time.sleep(0.75)
