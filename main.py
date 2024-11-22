@@ -45,8 +45,8 @@ class IRCBot:
         self.conversation_with = None
 
     def outreach(self, outreachNum):
-        self.conversation_with = random.choice(self.user_list)
         if outreachNum == 1:
+            self.conversation_with = random.choice(self.user_list)
             self.send_command(f"PRIVMSG {self.channel} : Hello {self.conversation_with}!")
         else:
             self.send_command(f"PRIVMSG {self.channel} : Hello again {self.conversation_with}!")
