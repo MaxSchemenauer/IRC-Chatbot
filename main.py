@@ -1,4 +1,5 @@
 import random
+import re
 import socket
 import sys
 import threading
@@ -174,7 +175,12 @@ class IRCBot:
         response = None
         second_response = None
         die = False
-        if "help" in command:
+        if "supplement" in command:
+            response = supplement_recommendation(data, supplement_claims, command)
+            response = f"{sender}, {response}"
+        elif "similar to" in command:
+            response = recommend(command.split("similar to ")[1])
+        elif "help" in command:
             response = "Available commands: help, hello, usage, die, users, forget"
         elif "usage" in command or "who are you" in command:
             response = f"I am KM-bot, a simple chatbot created by Kamran Bastani, and Max Schemenauer. CSC-482-01"
@@ -192,11 +198,6 @@ class IRCBot:
         elif "die" == command:
             response = "*death noises*"
             die = True
-        elif "supplement" in command:
-            response = supplement_recommendation(data, supplement_claims, command)
-            response = f"{sender}, {response}"
-        elif "similar to" in command:
-            response = recommend(command.split("similar to ")[1])
         elif command in [greeting.lower() for greeting in available_greetings] and self.state in ["START","1_INITIAL_OUTREACH", "2_INITIAL_OUTREACH"]: # PHASE II
             self.handle_greeting(sender, command)  # just received a greeting
         elif self.state == "2_OUTREACH_REPLY": # receiving an inquiry
@@ -210,8 +211,14 @@ class IRCBot:
             return
         else:
             response = f"Unknown command: {command}. Try 'usage' to see available commands."
-        if response is not None and ("die" in response):
-            response = "I can't kill another bot."
+        if "die" in command:
+            # Create a regex pattern for "name: die"
+            user_pattern = r"(\b\w+\b): die"
+            match = re.search(user_pattern, command)
+            if match:
+                name = match.group(1)  # Extract the name before ": die"
+                if name != sender and name != self.nickname:  # Exclude sender and bot itself
+                    response = "I can't kill another bot."
 
         time.sleep(0.75)
         if response:
