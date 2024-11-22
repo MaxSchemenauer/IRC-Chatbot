@@ -41,32 +41,46 @@ class IRCBot:
         self.state = "START"
         self.greeting_timer_started = False
         self.timer = None
+        self.conversation_with = None
 
     def outreach(self, outreachNum):
+        self.conversation_with = random.choice(self.user_list)
         if outreachNum == 1:
-            self.send_command(f"PRIVMSG {self.channel} : Hello!")
+            self.send_command(f"PRIVMSG {self.channel} : Hello {self.conversation_with}!")
         else:
-            self.send_command(f"PRIVMSG {self.channel} : Hello again!")
+            self.send_command(f"PRIVMSG {self.channel} : Hello again {self.conversation_with}!")
+
 
     def handle_timer_end(self):
+        print("\n___TIMER ENDED___\n")
         if self.state == 'START':
             self.state = '1_INITIAL_OUTREACH'
             self.outreach(1)
-            self.start_greeting_timer()
+            self.start_greeting_timer(15)
         elif self.state == '1_INITIAL_OUTREACH':
             self.state = '2_INITIAL_OUTREACH'
             self.outreach(2)
-            self.start_greeting_timer()
+            self.start_greeting_timer(15)
         elif self.state == '2_INITIAL_OUTREACH':
             self.state = 'GIVE_UP_FRUSTRATED'
             self.frustrated()
+        elif self.state == '2_OUTREACH_REPLY':
+            self.state = 'GIVE_UP_FRUSTRATED'
+            self.frustrated()
+        elif self.state == '1_INQUIRY':
+            self.state = 'GIVE_UP_FRUSTRATED'
+            self.frustrated()
+        elif self.state == "2_INQUIRY":
+            self.state = 'GIVE_UP_FRUSTRATED'
+            self.frustrated()
 
-    def start_greeting_timer(self):
+    def start_greeting_timer(self, timer_length):
         if self.timer:  # Cancel any existing timer
             self.timer.cancel()
         self.greeting_timer_started = True
-        self.timer = threading.Timer(5, self.handle_timer_end)
+        self.timer = threading.Timer(timer_length, self.handle_timer_end)
         self.timer.start()
+        print("___TIMER STARTED___")
 
     def connect(self):
         # Connect to the IRC server
@@ -74,19 +88,51 @@ class IRCBot:
         self.send_command(f"NICK {self.nickname}")
         self.send_command(f"USER {self.nickname} 0 * :{self.nickname}")
         self.send_command(f"JOIN {self.channel}")
+        self.start_greeting_timer(20)
+
+
+    def frustrated(self):
+        self.send_command(f"PRIVMSG {self.channel} : Alright then don't respond.")
+        self.state = 'START'
+
+    def receive_inquiry(self, sender, command):
+        print("RECEIVE INQUIRY")
+        if sender != self.conversation_with:
+            return
+        if self.state == "2_OUTREACH_REPLY":
+            self.send_command(f"PRIVMSG {self.channel} : I'm doing good.")
+            self.state = '2_INQUIRY_REPLY'
+        elif self.state == "2_INQUIRY_REPLY":
+            self.send_command(f"PRIVMSG {self.channel} : I sat around in this channel getting tested.")
+            self.state = '1_INQUIRY_REPLY'
+            self.state = "STATE"
+
+    def handle_inquiry_reply(self, sender, command):
+        if sender != self.conversation_with:
+            return
+        self.send_command(f"PRIVMSG {self.channel} : What did you do today {sender}?")
+        self.state = '2_INQUIRY'
+        self.start_greeting_timer(15)
+
+    def handle_greeting(self, sender, message):
+        if self.state == 'START': # we receive the initial greeting
+            self.conversation_with = sender
+            self.state = '2_OUTREACH_REPLY'
+            self.send_command(f"PRIVMSG {self.channel} : Hello! {sender}")
+            self.start_greeting_timer(15)
+        if "INITIAL_OUTREACH" in self.state: # we receive a greeting after we reached out
+            if sender != self.conversation_with:
+                return
+            self.state = "1_INQUIRY"
+            self.send_command(f"PRIVMSG {self.channel} : How are you {sender}?")
+            self.start_greeting_timer(15)
 
     def send_command(self, command):
         # Send a command to the IRC server
         self.socket.send((command + "\r\n").encode())
 
-    def frustrated(self):
-        self.send_command(f"PRIVMSG {self.channel} : Alright then don't respond.")
-        self.state = 'START'
-        self.start_greeting_timer()
-
     def listen(self):
         # Main loop for receiving messages
-        first = True
         while True:
             response = self.socket.recv(2048).decode()
             if response.startswith("PING"):
@@ -102,9 +148,12 @@ class IRCBot:
 
     def handle_response(self, message):
         # Process messages and check for commands
+        print("RECEIVED MESSAGE")
+
         if f"{self.nickname}:" in message:
             sender = message.split('!')[0][1:]
             command = message.split(f"{self.nickname}:")[1].strip()
+            print("NAME IN MESSAGE")
             self.respond_to_command(command, sender)
 
         if " 353 " in message:
@@ -119,16 +168,13 @@ class IRCBot:
 
     def respond_to_command(self, command, sender):
         # Respond to recognized commands
+        print("RESPONDING TO COMMAND")
+
         command = command.lower()
         response = None
         second_response = None
         die = False
-        if command == "hello there":
-            response = f"General Kenobi {sender}"
-        elif command in [greeting.lower() for greeting in available_greetings]:
-            #self.handle_greeting(sender, command)  # just received a greeting
-            response = f"{random.choice(available_greetings)} {sender}"
-        elif "help" in command:
+        if "help" in command:
             response = "Available commands: help, hello, usage, die, users, forget"
         elif "usage" in command or "who are you" in command:
             response = f"I am KM-bot, a simple chatbot created by Kamran Bastani, and Max Schemenauer. CSC-482-01"
@@ -137,12 +183,12 @@ class IRCBot:
             response = "Memory Erased."
         elif "users" in command:
             # Send the list of users to the channel if it exists
+            self.request_user_list()  # Refresh the user list
             if self.user_list:
                 user_list_message = "Users in channel: " + ", ".join(self.user_list)
                 response = f"{self.channel} :{user_list_message}"
             else:
                 response = "I couldn't retrieve the user list. Please try again."
-            self.request_user_list()  # Refresh the user list
         elif "die" == command:
             response = "*death noises*"
             die = True
@@ -150,6 +196,17 @@ class IRCBot:
             response = supplement_recommendation(data, supplement_claims, command)
         elif "similar to" in command:
             response = recommend(command.split("similar to ")[1])
+        elif command in [greeting.lower() for greeting in available_greetings] and self.state in ["START","1_INITIAL_OUTREACH", "2_INITIAL_OUTREACH"]: # PHASE II
+            self.handle_greeting(sender, command)  # just received a greeting
+        elif self.state == "2_OUTREACH_REPLY": # receiving an inquiry
+            self.receive_inquiry(sender, command)
+        elif self.state == "1_INQUIRY": # receiving inquiry reply
+            self.handle_inquiry_reply(sender, command)
+        elif self.state == "2_INQUIRY_REPLY": # just received second inquiry
+            self.receive_inquiry(sender, command)
+        elif self.state == "2_INQUIRY":
+            self.state = "START"
+            return
         else:
             response = f"Unknown command: {command}. Try 'usage' to see available commands."
         if response is not None and (": die" in response or ":die" in response):
