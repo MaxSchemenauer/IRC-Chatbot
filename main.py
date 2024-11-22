@@ -194,6 +194,7 @@ class IRCBot:
             die = True
         elif "supplement" in command:
             response = supplement_recommendation(data, supplement_claims, command)
+            response = f"{sender}, {response}"
         elif "similar to" in command:
             response = recommend(command.split("similar to ")[1])
         elif command in [greeting.lower() for greeting in available_greetings] and self.state in ["START","1_INITIAL_OUTREACH", "2_INITIAL_OUTREACH"]: # PHASE II
